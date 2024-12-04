@@ -1,10 +1,12 @@
 import streamlit as st
 import groq
-from docxtpl import DocxTemplate
 from datetime import datetime
-from docx2pdf import convert
-import PyPDF2
 import os
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
 
 # read in resume
 with open("resume.pdf", "rb") as file:
@@ -53,41 +55,53 @@ def generate_cover_letter(job_description):
     return response.choices[0].message.content
 
 def save_cover_letter(cover_letter_text, company_name):
-    """Save cover letter to Word template and convert to PDF"""
+    """Save cover letter directly to PDF"""
     # Create output directory if it doesn't exist
     os.makedirs("output", exist_ok=True)
-    
-    # Load template
-    template = DocxTemplate("template.docx")
     
     # Current date
     current_date = datetime.now().strftime("%B %d, %Y")
     
-    # Context for template
-    context = {
-        'date': current_date,
-        'cover_letter_body': cover_letter_text
-    }
+    # Create output filename
+    pdf_filename = f"output/cover_letter_{company_name}_{datetime.now().strftime('%Y%m%d')}.pdf"
     
-    try:
-        # Render template
-        template.render(context)
-        
-        # Create output filenames
-        docx_filename = f"cover_letter_{company_name}_{datetime.now().strftime('%Y%m%d')}.docx"
-        pdf_filename = docx_filename.replace('.docx', '.pdf')
-        
-        # Save as DOCX
-        template.save(f"output/{docx_filename}")
-        
-        # Convert to PDF
-        convert(f"output/{docx_filename}", f"output/{pdf_filename}")
-        
-        return pdf_filename
-        
-    except Exception as e:
-        st.error(f"Error generating document: {str(e)}")
-        return None
+    # Create PDF document
+    doc = SimpleDocTemplate(
+        pdf_filename,
+        pagesize=letter,
+        rightMargin=72,
+        leftMargin=72,
+        topMargin=72,
+        bottomMargin=72
+    )
+    
+    # Create styles
+    styles = getSampleStyleSheet()
+    normal_style = ParagraphStyle(
+        'CustomNormal',
+        parent=styles['Normal'],
+        spaceBefore=12,
+        spaceAfter=12,
+        fontSize=12
+    )
+    
+    # Build document content
+    content = []
+    
+    # Add date
+    content.append(Paragraph(current_date, normal_style))
+    content.append(Spacer(1, 0.2*inch))
+    
+    # Add cover letter text
+    paragraphs = cover_letter_text.split('\n\n')
+    for para in paragraphs:
+        if para.strip():
+            content.append(Paragraph(para, normal_style))
+    
+    # Build PDF
+    doc.build(content)
+    
+    return pdf_filename
 
 def main():
     st.title("Cover Letter Generator")
