@@ -1,0 +1,7 @@
+# requirements.txt
+streamlit
+groq
+python-docx-template
+docx2pdf
+requests
+beautifulsoup4
