@@ -2,6 +2,7 @@ import streamlit as st
 import groq
 from datetime import datetime
 import os
+import PyPDF2
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
