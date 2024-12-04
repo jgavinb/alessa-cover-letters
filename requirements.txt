@@ -1,5 +1,8 @@
 # requirements.txt
 streamlit
 groq
-python-docx-template
 docx2pdf
+docxtpl
+os
+datetime
+PyPDF2
